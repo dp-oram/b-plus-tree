@@ -106,7 +106,7 @@ namespace BPlusTree
 		checkLocation(location);
 
 		uchar placeholder[blockSize];
-		file.seekg(location * blockSize, file.beg);
+		file.seekg(location, file.beg);
 		file.read((char *)placeholder, blockSize);
 
 		return bytes(placeholder, placeholder + blockSize);
@@ -124,7 +124,7 @@ namespace BPlusTree
 		uchar placeholder[blockSize];
 		copy(data.begin(), data.end(), placeholder);
 
-		file.seekp(location * blockSize, file.beg);
+		file.seekp(location, file.beg);
 		file.write((const char *)placeholder, blockSize);
 	}
 
