@@ -123,7 +123,7 @@ namespace BPlusTree
 		 * 	4 bytes size of this storage block in bytes (unsigned int)
 		 * One should read exactly "size" bytes of data.
 		 *
-		 * /note
+		 * \note
 		 * This tree has an address per every key.
 		 * An optimization would be to hold one more address than the key, pointing to the keys larger than the largest.
 		 * This optimization is not implemented.
