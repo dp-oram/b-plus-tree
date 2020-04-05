@@ -1,5 +1,7 @@
 #include "storage-adapter.hpp"
 
+#include "utility.hpp"
+
 #include <boost/format.hpp>
 #include <cstring>
 
@@ -31,6 +33,9 @@ namespace BPlusTree
 	InMemoryStorageAdapter::InMemoryStorageAdapter(number blockSize) :
 		AbsStorageAdapter(blockSize)
 	{
+		auto emptyBlock = bytesFromNumber(empty());
+		emptyBlock.resize(blockSize);
+		set(meta(), emptyBlock);
 	}
 
 	InMemoryStorageAdapter::~InMemoryStorageAdapter()
@@ -66,6 +71,11 @@ namespace BPlusTree
 		return EMPTY;
 	}
 
+	number InMemoryStorageAdapter::meta()
+	{
+		return META;
+	}
+
 	void InMemoryStorageAdapter::checkLocation(number location)
 	{
 		if (location >= locationCounter)
@@ -81,7 +91,7 @@ namespace BPlusTree
 	FileSystemStorageAdapter::FileSystemStorageAdapter(number blockSize, string filename, bool override) :
 		AbsStorageAdapter(blockSize)
 	{
-		auto flags = fstream::in | fstream::out | fstream::binary;
+		auto flags = fstream::in | fstream::out | fstream::binary | fstream::ate;
 		if (override)
 		{
 			flags |= fstream::trunc;
@@ -93,7 +103,14 @@ namespace BPlusTree
 			throw Exception(boost::format("cannot open %1%: %2%") % filename % strerror(errno));
 		}
 
-		locationCounter = override ? (number)file.tellg() : blockSize;
+		locationCounter = override ? (2 * blockSize) : (number)file.tellg();
+
+		if (override)
+		{
+			auto emptyBlock = bytesFromNumber(empty());
+			emptyBlock.resize(blockSize);
+			set(meta(), emptyBlock);
+		}
 	}
 
 	FileSystemStorageAdapter::~FileSystemStorageAdapter()
@@ -136,6 +153,11 @@ namespace BPlusTree
 	number FileSystemStorageAdapter::empty()
 	{
 		return EMPTY;
+	}
+
+	number FileSystemStorageAdapter::meta()
+	{
+		return blockSize;
 	}
 
 	void FileSystemStorageAdapter::checkLocation(number location)

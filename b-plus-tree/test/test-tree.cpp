@@ -355,6 +355,39 @@ namespace BPlusTree
 		delete tree;
 	}
 
+	TEST_P(TreeTest, SearchAllDisaster)
+	{
+		const auto start	 = 5uLL;
+		const auto end		 = 15uLL;
+		const auto FILE_NAME = "tree.bin";
+
+		auto data = generateDataPoints(start, end, 100, 1);
+		storage	  = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, true);
+		tree	  = new Tree(storage, data);
+
+		delete storage;
+		delete tree;
+
+		storage = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, false);
+		tree	= new Tree(storage);
+
+		auto returned = tree->search(start, end);
+		vector<bytes> expected;
+		expected.resize(data.size());
+
+		transform(
+			data.begin(),
+			data.end(),
+			expected.begin(),
+			[](pair<number, bytes> val) { return val.second; });
+
+		ASSERT_EQ(expected, returned);
+
+		remove(FILE_NAME);
+
+		delete tree;
+	}
+
 	TEST_P(TreeTest, ConsistencyCheck)
 	{
 		populateTree();

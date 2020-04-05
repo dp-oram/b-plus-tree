@@ -21,6 +21,13 @@ namespace BPlusTree
 		{
 			throw Exception("storage block size too small for the tree");
 		}
+
+		auto rootBytes = storage->get(storage->meta());
+		rootBytes.resize(sizeof(number));
+		if (numberFromBytes(rootBytes) != storage->empty())
+		{
+			root = numberFromBytes(rootBytes);
+		}
 	}
 
 	Tree::Tree(AbsStorageAdapter *storage, vector<pair<number, bytes>> data) :
@@ -50,6 +57,10 @@ namespace BPlusTree
 			layer = pushLayer(layer);
 		}
 		root = layer[0].second;
+
+		auto rootBytes = bytesFromNumber(root);
+		rootBytes.resize(storage->getBlockSize());
+		storage->set(storage->meta(), rootBytes);
 	}
 
 	vector<bytes> Tree::search(number key)

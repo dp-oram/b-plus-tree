@@ -50,6 +50,18 @@ namespace BPlusTree
 					throw Exception(boost::format("TestingStorageAdapterType %1% is not implemented") % storageType);
 			}
 		}
+
+		void disaster()
+		{
+			if (get<2>(GetParam()) == StorageAdapterTypeFileSystem)
+			{
+				delete storage;
+				delete tree;
+
+				storage = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, false);
+				tree	= new Tree(storage);
+			}
+		}
 	};
 
 	bytes random(int size)
@@ -106,6 +118,8 @@ namespace BPlusTree
 
 			EXPECT_EQ(expected, returned);
 		}
+
+		disaster();
 
 		for (number i = 0; i < COUNT; i++)
 		{

@@ -48,6 +48,13 @@ namespace BPlusTree
 		virtual number empty() = 0;
 
 		/**
+		 * @brief gives the address of the special (reserved) meta block
+		 *
+		 * @return number the address of the meta block
+		 */
+		virtual number meta() = 0;
+
+		/**
 		 * @brief Construct a new Abs Storage Adapter object
 		 *
 		 * @param blockSize the size of block in bytes (better be enough sized for the B+ tree)
@@ -75,10 +82,10 @@ namespace BPlusTree
 	{
 		private:
 		map<number, bytes> memory;
-		number locationCounter = ROOT;
+		number locationCounter = META + 1;
 
 		static inline const number EMPTY = 0;
-		static inline const number ROOT	 = 1;
+		static inline const number META	 = 1;
 
 		void checkLocation(number location);
 
@@ -91,6 +98,7 @@ namespace BPlusTree
 		number malloc() final;
 
 		number empty() final;
+		number meta() final;
 	};
 
 	/**
@@ -117,5 +125,6 @@ namespace BPlusTree
 		number malloc() final;
 
 		number empty() final;
+		number meta() final;
 	};
 }
