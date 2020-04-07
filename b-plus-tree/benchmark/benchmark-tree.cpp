@@ -22,8 +22,8 @@ namespace BPlusTree
 		inline static const string FILE_NAME = "storage.bin";
 
 		protected:
-		Tree* tree;
-		AbsStorageAdapter* storage;
+		unique_ptr<Tree> tree;
+		unique_ptr<AbsStorageAdapter> storage;
 
 		void Configure(number BLOCK_SIZE, number COUNT, BenchmarkStorageAdapterType type)
 		{
@@ -33,20 +33,14 @@ namespace BPlusTree
 			switch (type)
 			{
 				case StorageAdapterTypeInMemory:
-					storage = new InMemoryStorageAdapter(BLOCK_SIZE);
+					storage = make_unique<InMemoryStorageAdapter>(BLOCK_SIZE);
 					break;
 				case StorageAdapterTypeFileSystem:
-					storage = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, true);
+					storage = make_unique<FileSystemStorageAdapter>(BLOCK_SIZE, FILE_NAME, true);
 					break;
 				default:
 					throw Exception(boost::format("BenchmarkStorageAdapterType %1% is not implemented") % type);
 			}
-		}
-
-		~TreeBenchmark() override
-		{
-			delete tree;
-			delete storage;
 		}
 	};
 
@@ -71,7 +65,7 @@ namespace BPlusTree
 			data.push_back({i, random(BLOCK_SIZE - 4 * sizeof(number))});
 		}
 
-		tree = new Tree(storage, data);
+		tree = make_unique<Tree>(move(storage), data);
 
 		for (auto _ : state)
 		{
@@ -91,7 +85,7 @@ namespace BPlusTree
 			data.push_back({i, random(BLOCK_SIZE - 4 * sizeof(number))});
 		}
 
-		tree = new Tree(storage, data);
+		tree = make_unique<Tree>(move(storage), data);
 
 		for (auto _ : state)
 		{

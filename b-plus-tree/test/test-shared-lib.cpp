@@ -28,17 +28,13 @@ int main()
 		data.push_back({i, random(BLOCK_SIZE - 4 * sizeof(number))});
 	}
 
-	auto storage = new InMemoryStorageAdapter(BLOCK_SIZE);
-	auto tree	 = new Tree(storage, data);
+	auto tree = make_unique<Tree>(make_unique<InMemoryStorageAdapter>(BLOCK_SIZE), data);
 
 	for (number i = 0; i < QUERIES; i++)
 	{
 		number start = rand() % (COUNT - RANGE);
 		tree->search(start, start + RANGE - 1);
 	}
-
-	delete storage;
-	delete tree;
 
 	cout << "Successful!" << endl;
 

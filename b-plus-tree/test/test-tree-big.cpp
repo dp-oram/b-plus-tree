@@ -23,12 +23,11 @@ namespace BPlusTree
 		inline static const string FILE_NAME = "storage.bin";
 
 		protected:
-		Tree* tree;
-		AbsStorageAdapter* storage;
+		unique_ptr<Tree> tree;
+		unique_ptr<AbsStorageAdapter> storage;
 
 		~TreeTestBig() override
 		{
-			delete storage;
 			remove(FILE_NAME.c_str());
 		}
 
@@ -41,10 +40,10 @@ namespace BPlusTree
 			switch (storageType)
 			{
 				case StorageAdapterTypeInMemory:
-					storage = new InMemoryStorageAdapter(BLOCK_SIZE);
+					storage = make_unique<InMemoryStorageAdapter>(BLOCK_SIZE);
 					break;
 				case StorageAdapterTypeFileSystem:
-					storage = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, true);
+					storage = make_unique<FileSystemStorageAdapter>(BLOCK_SIZE, FILE_NAME, true);
 					break;
 				default:
 					throw Exception(boost::format("TestingStorageAdapterType %1% is not implemented") % storageType);
@@ -55,11 +54,9 @@ namespace BPlusTree
 		{
 			if (get<2>(GetParam()) == StorageAdapterTypeFileSystem)
 			{
-				delete storage;
-				delete tree;
+				tree.reset();
 
-				storage = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, false);
-				tree	= new Tree(storage);
+				tree = make_unique<Tree>(make_unique<FileSystemStorageAdapter>(BLOCK_SIZE, FILE_NAME, false));
 			}
 		}
 	};
@@ -106,7 +103,7 @@ namespace BPlusTree
 							random(BLOCK_SIZE * 3)});
 		}
 
-		tree = new Tree(storage, data);
+		tree = make_unique<Tree>(move(storage), data);
 
 		ASSERT_NO_THROW(tree->checkConsistency());
 

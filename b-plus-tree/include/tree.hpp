@@ -60,7 +60,7 @@ namespace BPlusTree
 		 *
 		 * @param storage the storage provider to use in the tree
 		 */
-		Tree(AbsStorageAdapter *storage);
+		Tree(shared_ptr<AbsStorageAdapter> storage);
 
 		/**
 		 * @brief Construct a new Tree object
@@ -74,10 +74,10 @@ namespace BPlusTree
 		 * @param storage the storage provider to use in the tree
 		 * @param data the data points to create tree from
 		 */
-		Tree(AbsStorageAdapter *storage, vector<pair<number, bytes>> data);
+		Tree(shared_ptr<AbsStorageAdapter> storage, vector<pair<number, bytes>> data);
 
 		private:
-		AbsStorageAdapter *storage;
+		shared_ptr<AbsStorageAdapter> storage;
 		number root;
 		number b;
 

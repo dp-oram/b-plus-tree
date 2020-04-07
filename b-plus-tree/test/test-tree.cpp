@@ -37,24 +37,19 @@ namespace BPlusTree
 		inline static number BLOCK_SIZE;
 
 		protected:
-		Tree* tree;
-		AbsStorageAdapter* storage;
-
-		~TreeTest() override
-		{
-			delete storage;
-		}
+		unique_ptr<Tree> tree;
+		shared_ptr<AbsStorageAdapter> storage;
 
 		TreeTest()
 		{
 			BLOCK_SIZE = GetParam();
-			storage	   = new InMemoryStorageAdapter(BLOCK_SIZE);
+			storage	   = make_shared<InMemoryStorageAdapter>(BLOCK_SIZE);
 		}
 
 		vector<pair<number, bytes>> populateTree(int from = 5, int to = 15, int size = 100, int duplicates = 1)
 		{
 			auto data = generateDataPoints(from, to, size, duplicates);
-			tree	  = new Tree(storage, data);
+			tree	  = make_unique<Tree>(storage, data);
 
 			return data;
 		}
@@ -104,13 +99,13 @@ namespace BPlusTree
 	{
 		auto data = generateDataPoints(5, 7, 100);
 
-		ASSERT_NO_THROW(new Tree(storage, data));
+		ASSERT_NO_THROW(make_unique<Tree>(storage, data));
 	}
 
 	TEST_P(TreeTest, BlockSizeTooSmall)
 	{
-		auto storage = new InMemoryStorageAdapter(4 * sizeof(number));
-		ASSERT_THROW_CONTAINS(new Tree(storage, vector<pair<number, bytes>>()), "block size too small");
+		auto storage = make_shared<InMemoryStorageAdapter>(4 * sizeof(number));
+		ASSERT_THROW_CONTAINS(make_unique<Tree>(storage, vector<pair<number, bytes>>()), "block size too small");
 	}
 
 	TEST_P(TreeTest, ReadDataLayer)
@@ -121,7 +116,7 @@ namespace BPlusTree
 
 		auto data = generateDataPoints(from, to, size);
 
-		tree = new Tree(storage, data);
+		tree = make_unique<Tree>(storage, data);
 
 		auto current = tree->leftmostDataBlock;
 		for (uint i = from; i <= to; i++)
@@ -142,35 +137,29 @@ namespace BPlusTree
 			ASSERT_EQ((*block).second, payload);
 			ASSERT_EQ(i, key);
 		}
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, CreateNodeBlockTooBig)
 	{
-		tree = new Tree(storage);
+		tree = make_unique<Tree>(storage);
 		vector<pair<number, number>> pairs;
 		pairs.resize(BLOCK_SIZE / 2);
 
 		ASSERT_ANY_THROW(tree->createNodeBlock(pairs));
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, CreateNodeBlock)
 	{
-		tree = new Tree(storage);
+		tree = make_unique<Tree>(storage);
 
 		auto pairs = generatePairs(BLOCK_SIZE).second;
 
 		ASSERT_NO_THROW(tree->createNodeBlock(pairs));
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, ReadNodeBlock)
 	{
-		tree = new Tree(storage);
+		tree = make_unique<Tree>(storage);
 
 		auto pairs = generatePairs(BLOCK_SIZE).second;
 
@@ -180,13 +169,11 @@ namespace BPlusTree
 		auto read = tree->readNodeBlock(block);
 
 		ASSERT_EQ(pairs, read);
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, ReadWrongNodeBlock)
 	{
-		tree = new Tree(storage);
+		tree = make_unique<Tree>(storage);
 
 		auto pairs = generatePairs(BLOCK_SIZE).second;
 
@@ -194,8 +181,6 @@ namespace BPlusTree
 		auto block	 = tree->checkType(address).second;
 
 		ASSERT_THROW_CONTAINS(tree->readDataBlock(block), "non-data block");
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, ReadWrongDataBlock)
@@ -206,13 +191,11 @@ namespace BPlusTree
 		auto block	 = tree->checkType(address).second;
 
 		ASSERT_THROW_CONTAINS(tree->readNodeBlock(block), "non-node block");
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, PushLayer)
 	{
-		tree = new Tree(storage);
+		tree = make_unique<Tree>(storage);
 
 		auto [count, pairs] = generatePairs(BLOCK_SIZE * 2);
 
@@ -232,8 +215,6 @@ namespace BPlusTree
 			}
 		}
 		EXPECT_EQ(count, counter);
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, BasicSearch)
@@ -252,8 +233,6 @@ namespace BPlusTree
 
 		ASSERT_NE(0, returned.size());
 		ASSERT_EQ((*expected).second, returned[0]);
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, BasicSearchNotFound)
@@ -265,8 +244,6 @@ namespace BPlusTree
 		auto returned = tree->search(query);
 
 		ASSERT_EQ(0, returned.size());
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, BasicSearchDuplicates)
@@ -298,8 +275,6 @@ namespace BPlusTree
 
 		ASSERT_EQ(duplicates, returned.size());
 		ASSERT_EQ(expected, returned);
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, BasicSearchRangeDuplicates)
@@ -329,8 +304,6 @@ namespace BPlusTree
 			}
 		}
 		ASSERT_EQ(expected, returned);
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, BasicSearchAll)
@@ -351,8 +324,6 @@ namespace BPlusTree
 			[](pair<number, bytes> val) { return val.second; });
 
 		ASSERT_EQ(expected, returned);
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, SearchAllDisaster)
@@ -362,14 +333,13 @@ namespace BPlusTree
 		const auto FILE_NAME = "tree.bin";
 
 		auto data = generateDataPoints(start, end, 100, 1);
-		storage	  = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, true);
-		tree	  = new Tree(storage, data);
+		storage	  = make_shared<FileSystemStorageAdapter>(BLOCK_SIZE, FILE_NAME, true);
+		tree	  = make_unique<Tree>(storage, data);
 
-		delete storage;
-		delete tree;
+		tree.reset();
 
-		storage = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, false);
-		tree	= new Tree(storage);
+		storage = make_shared<FileSystemStorageAdapter>(BLOCK_SIZE, FILE_NAME, false);
+		tree	= make_unique<Tree>(storage);
 
 		auto returned = tree->search(start, end);
 		vector<bytes> expected;
@@ -384,8 +354,6 @@ namespace BPlusTree
 		ASSERT_EQ(expected, returned);
 
 		remove(FILE_NAME);
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, ConsistencyCheck)
@@ -393,8 +361,6 @@ namespace BPlusTree
 		populateTree();
 
 		ASSERT_NO_THROW(tree->checkConsistency());
-
-		delete tree;
 	}
 
 	TEST_P(TreeTest, ConsistencyCheckWrongBlockType)

@@ -13,7 +13,7 @@ namespace BPlusTree
 	pair<BlockType, number> getTypeSize(number typeAndSize);
 	number setTypeSize(BlockType type, number size);
 
-	Tree::Tree(AbsStorageAdapter *storage) :
+	Tree::Tree(shared_ptr<AbsStorageAdapter> storage) :
 		storage(storage)
 	{
 		b = (storage->getBlockSize() - sizeof(number)) / (2 * sizeof(number));
@@ -30,7 +30,7 @@ namespace BPlusTree
 		}
 	}
 
-	Tree::Tree(AbsStorageAdapter *storage, vector<pair<number, bytes>> data) :
+	Tree::Tree(shared_ptr<AbsStorageAdapter> storage, vector<pair<number, bytes>> data) :
 		Tree(storage)
 	{
 		sort(data.begin(), data.end(), [](pair<number, bytes> a, pair<number, bytes> b) { return a.first < b.first; });

@@ -21,7 +21,7 @@ namespace BPlusTree
 		inline static const string FILE_NAME  = "storage.bin";
 
 		protected:
-		AbsStorageAdapter* adapter;
+		unique_ptr<AbsStorageAdapter> adapter;
 
 		StorageAdapterTest()
 		{
@@ -29,10 +29,10 @@ namespace BPlusTree
 			switch (type)
 			{
 				case StorageAdapterTypeInMemory:
-					adapter = new InMemoryStorageAdapter(BLOCK_SIZE);
+					adapter = make_unique<InMemoryStorageAdapter>(BLOCK_SIZE);
 					break;
 				case StorageAdapterTypeFileSystem:
-					adapter = new FileSystemStorageAdapter(BLOCK_SIZE, FILE_NAME, true);
+					adapter = make_unique<FileSystemStorageAdapter>(BLOCK_SIZE, FILE_NAME, true);
 					break;
 				default:
 					throw Exception(boost::format("TestingStorageAdapterType %1% is not implemented") % type);
@@ -41,7 +41,6 @@ namespace BPlusTree
 
 		~StorageAdapterTest() override
 		{
-			delete adapter;
 			remove(FILE_NAME.c_str());
 		}
 	};
@@ -65,15 +64,15 @@ namespace BPlusTree
 			auto after		= fromText("after", BLOCK_SIZE);
 			string filename = "tmp.bin";
 
-			auto storage	   = new FileSystemStorageAdapter(BLOCK_SIZE, filename, true);
+			auto storage	   = make_unique<FileSystemStorageAdapter>(BLOCK_SIZE, filename, true);
 			auto addressBefore = storage->malloc();
 			storage->set(addressBefore, before);
 
 			ASSERT_EQ(before, storage->get(addressBefore));
 
-			delete storage;
+			storage.reset();
 
-			storage			  = new FileSystemStorageAdapter(BLOCK_SIZE, filename, false);
+			storage			  = make_unique<FileSystemStorageAdapter>(BLOCK_SIZE, filename, false);
 			auto addressAfter = storage->malloc();
 			storage->set(addressAfter, after);
 
@@ -92,7 +91,7 @@ namespace BPlusTree
 	{
 		if (GetParam() == StorageAdapterTypeFileSystem)
 		{
-			ASSERT_ANY_THROW(new FileSystemStorageAdapter(BLOCK_SIZE, "tmp.bin", false));
+			ASSERT_ANY_THROW(make_unique<FileSystemStorageAdapter>(BLOCK_SIZE, "tmp.bin", false));
 		}
 		else
 		{
