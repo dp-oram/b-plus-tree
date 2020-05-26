@@ -73,7 +73,7 @@ $(INTEGRATIONBIN): $(OBJ) $$(subst $$(BDIR), $(TDIR), $$@).cpp
 shared-debug: CPPFLAGS += -g
 shared-debug: shared
 
-shared: CPPFLAGS += -DSHARED
+shared: CPPFLAGS += -DSHARED -O3
 shared: $(OBJ)
 	$(CC) -shared $(LDLIBS) $(LDFLAGS) -o $(BDIR)/lib$(LIBNAME).so $(OBJ)
 

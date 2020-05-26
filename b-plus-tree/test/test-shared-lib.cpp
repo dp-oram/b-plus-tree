@@ -33,7 +33,8 @@ int main()
 	for (number i = 0; i < QUERIES; i++)
 	{
 		number start = rand() % (COUNT - RANGE);
-		tree->search(start, start + RANGE - 1);
+		vector<bytes> result;
+		tree->search(start, start + RANGE - 1, result);
 	}
 
 	cout << "Successful!" << endl;
