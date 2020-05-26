@@ -20,9 +20,9 @@ namespace BPlusTree
 		 * @brief reads one block of bytes from the address
 		 *
 		 * @param location the address from which to read
-		 * @return bytes the bytes read, one block
+		 * @param response the bytes read, one block
 		 */
-		virtual bytes get(number location) = 0;
+		virtual void get(number location, bytes &response) = 0;
 
 		/**
 		 * @brief write one block of bytes to the address
@@ -30,7 +30,7 @@ namespace BPlusTree
 		 * @param location the address to which to write
 		 * @param data the block of bytes to write (must be of block size)
 		 */
-		virtual void set(number location, bytes data) = 0;
+		virtual void set(number location, const bytes &data) = 0;
 
 		/**
 		 * @brief request an address to which it isi possible to write a block
@@ -93,8 +93,8 @@ namespace BPlusTree
 		InMemoryStorageAdapter(number blockSize);
 		~InMemoryStorageAdapter() final;
 
-		bytes get(number location) final;
-		void set(number location, bytes data) final;
+		void get(number location, bytes &response) final;
+		void set(number location, const bytes &data) final;
 		number malloc() final;
 
 		number empty() final;
@@ -120,8 +120,8 @@ namespace BPlusTree
 		FileSystemStorageAdapter(number blockSize, string filename, bool override);
 		~FileSystemStorageAdapter() final;
 
-		bytes get(number location) final;
-		void set(number location, bytes data) final;
+		void get(number location, bytes &response) final;
+		void set(number location, const bytes &data) final;
 		number malloc() final;
 
 		number empty() final;

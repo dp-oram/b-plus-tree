@@ -68,7 +68,9 @@ namespace BPlusTree
 			auto addressBefore = storage->malloc();
 			storage->set(addressBefore, before);
 
-			ASSERT_EQ(before, storage->get(addressBefore));
+			bytes read;
+			storage->get(addressBefore, read);
+			ASSERT_EQ(before, read);
 
 			storage.reset();
 
@@ -76,8 +78,13 @@ namespace BPlusTree
 			auto addressAfter = storage->malloc();
 			storage->set(addressAfter, after);
 
-			ASSERT_EQ(before, storage->get(addressBefore));
-			ASSERT_EQ(after, storage->get(addressAfter));
+			bytes readBefore;
+			storage->get(addressBefore, readBefore);
+			ASSERT_EQ(before, readBefore);
+
+			bytes readAfter;
+			storage->get(addressAfter, readAfter);
+			ASSERT_EQ(after, readAfter);
 
 			remove(filename.c_str());
 		}
@@ -107,7 +114,8 @@ namespace BPlusTree
 		ASSERT_NO_THROW({
 			auto address = adapter->malloc();
 			adapter->set(address, data);
-			adapter->get(address);
+			bytes read;
+			adapter->get(address, read);
 		});
 	}
 
@@ -136,7 +144,8 @@ namespace BPlusTree
 
 		auto address = adapter->malloc();
 		adapter->set(address, data);
-		auto returned = adapter->get(address);
+		bytes returned;
+		adapter->get(address, returned);
 
 		ASSERT_EQ(data, returned);
 	}

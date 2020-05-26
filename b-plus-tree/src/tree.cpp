@@ -22,7 +22,8 @@ namespace BPlusTree
 			throw Exception("storage block size too small for the tree");
 		}
 
-		auto rootBytes = storage->get(storage->meta());
+		bytes rootBytes;
+		storage->get(storage->meta(), rootBytes);
 		rootBytes.resize(sizeof(number));
 		if (numberFromBytes(rootBytes) != storage->empty())
 		{
@@ -30,10 +31,10 @@ namespace BPlusTree
 		}
 	}
 
-	Tree::Tree(shared_ptr<AbsStorageAdapter> storage, vector<pair<number, bytes>> data) :
+	Tree::Tree(shared_ptr<AbsStorageAdapter> storage, vector<pair<number, bytes>> &data) :
 		Tree(storage)
 	{
-		sort(data.begin(), data.end(), [](pair<number, bytes> a, pair<number, bytes> b) { return a.first < b.first; });
+		sort(data.begin(), data.end(), [](const pair<number, bytes> &a, const pair<number, bytes> &b) { return a.first < b.first; });
 
 		// data layer
 		vector<pair<number, number>> layer;
@@ -63,12 +64,12 @@ namespace BPlusTree
 		storage->set(storage->meta(), rootBytes);
 	}
 
-	vector<bytes> Tree::search(number key)
+	void Tree::search(number key, vector<bytes> &response)
 	{
-		return search(key, key);
+		return search(key, key, response);
 	}
 
-	vector<bytes> Tree::search(number start, number end)
+	void Tree::search(number start, number end, vector<bytes> &response)
 	{
 		auto address = root;
 		while (true)
@@ -91,13 +92,12 @@ namespace BPlusTree
 					if (address == storage->empty())
 					{
 						// key is larger than the largest
-						return vector<bytes>();
+						return;
 					}
 					break;
 				}
 				case DataBlock:
 				{
-					vector<bytes> result;
 					tuple<bytes, number, number> block;
 					while (true)
 					{
@@ -105,13 +105,13 @@ namespace BPlusTree
 						if (get<1>(block) < start || get<1>(block) > end)
 						{
 							// if we have read the block outside of the range, we are done
-							return result;
+							return;
 						}
-						result.push_back(get<0>(block));
+						response.push_back(get<0>(block));
 						if (get<2>(block) == storage->empty())
 						{
 							// if it is the last block in the linked list, we are done
-							return result;
+							return;
 						}
 						read = checkType(get<2>(block)).second;
 					}
@@ -120,7 +120,7 @@ namespace BPlusTree
 		}
 	}
 
-	vector<pair<number, number>> Tree::pushLayer(vector<pair<number, number>> input)
+	vector<pair<number, number>> Tree::pushLayer(const vector<pair<number, number>> &input)
 	{
 		vector<pair<number, number>> layer;
 		// go in a B-increments
@@ -152,7 +152,7 @@ namespace BPlusTree
 		return layer;
 	}
 
-	number Tree::createNodeBlock(vector<pair<number, number>> data)
+	number Tree::createNodeBlock(const vector<pair<number, number>> &data)
 	{
 		if (storage->getBlockSize() - sizeof(number) < data.size() * 2 * sizeof(number))
 		{
@@ -177,7 +177,7 @@ namespace BPlusTree
 		return address;
 	}
 
-	vector<pair<number, number>> Tree::readNodeBlock(bytes block)
+	vector<pair<number, number>> Tree::readNodeBlock(const bytes &block)
 	{
 		auto deconstructed = deconstruct(block, {sizeof(number)});
 		auto [type, size]  = getTypeSize(numberFromBytes(deconstructed[0]));
@@ -206,7 +206,7 @@ namespace BPlusTree
 		return result;
 	}
 
-	number Tree::createDataBlock(bytes data, number key, number next)
+	number Tree::createDataBlock(const bytes &data, number key, number next)
 	{
 		// different if all fits in a single storage block, or not
 		auto firstBlockSize = storage->getBlockSize() - 4 * sizeof(number);
@@ -258,7 +258,7 @@ namespace BPlusTree
 		return addresses[0];
 	}
 
-	tuple<bytes, number, number> Tree::readDataBlock(bytes block)
+	tuple<bytes, number, number> Tree::readDataBlock(const bytes &block)
 	{
 		bytes data;
 		auto address = storage->empty();
@@ -269,7 +269,15 @@ namespace BPlusTree
 		{
 			auto first = address == storage->empty();
 
-			auto read = first ? block : storage->get(address);
+			bytes read;
+			if (first)
+			{
+				read.insert(read.begin(), block.begin(), block.end());
+			}
+			else
+			{
+				storage->get(address, read);
+			}
 
 			auto deconstructed = deconstruct(read, {(first ? 4 : 2) * (int)sizeof(number)});
 			auto numbers	   = deconstructNumbers(deconstructed[0]);
@@ -304,7 +312,8 @@ namespace BPlusTree
 
 	pair<BlockType, bytes> Tree::checkType(number address)
 	{
-		auto block		   = storage->get(address);
+		bytes block;
+		storage->get(address, block);
 		auto deconstructed = deconstruct(block, {sizeof(number)});
 		auto typeAndSize   = numberFromBytes(deconstructed[0]);
 		return {getTypeSize(typeAndSize).first, block};

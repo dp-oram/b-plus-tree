@@ -40,18 +40,18 @@ namespace BPlusTree
 		 * May be multi-element if this key has duplicates.
 		 *
 		 * @param key a key to look for
-		 * @return vector<bytes> the data corresponding to the key
+		 * @param response the data corresponding to the key
 		 */
-		vector<bytes> search(number key);
+		void search(number key, vector<bytes> &response);
 
 		/**
 		 * @brief same as search except it returns data corresponding to all key between given (inclusive)
 		 *
 		 * @param start the inclusive lower range endpoint
 		 * @param end the inclusive upper range endpoint
-		 * @return vector<bytes> the data corresponding to the range
+		 * @param response the data corresponding to the range
 		 */
-		vector<bytes> search(number start, number end);
+		void search(number start, number end, vector<bytes> &response);
 
 		/**
 		 * @brief Construct a new Tree object
@@ -74,7 +74,7 @@ namespace BPlusTree
 		 * @param storage the storage provider to use in the tree
 		 * @param data the data points to create tree from
 		 */
-		Tree(shared_ptr<AbsStorageAdapter> storage, vector<pair<number, bytes>> data);
+		Tree(shared_ptr<AbsStorageAdapter> storage, vector<pair<number, bytes>> &data);
 
 		private:
 		shared_ptr<AbsStorageAdapter> storage;
@@ -105,7 +105,7 @@ namespace BPlusTree
 		 * @param next the pointer to the next data block for linked list (may be EMPTY)
 		 * @return number the address of the newly created data block
 		 */
-		number createDataBlock(bytes data, number key, number next);
+		number createDataBlock(const bytes &data, number key, number next);
 
 		/**
 		 * @brief reads the data from the DataBlock
@@ -113,7 +113,7 @@ namespace BPlusTree
 		 * @param block the first storage block of the Data Block (usually got with checkType)
 		 * @return tuple<bytes, number, number> tuple of data itself, associated key and address of the next Data Block
 		 */
-		tuple<bytes, number, number> readDataBlock(bytes block);
+		tuple<bytes, number, number> readDataBlock(const bytes &block);
 
 		/**
 		 * @brief Create a Node Block and store it in the storage
@@ -133,7 +133,7 @@ namespace BPlusTree
 		 *
 		 * @return number the address of the newly creatred node block
 		 */
-		number createNodeBlock(vector<pair<number, number>> data);
+		number createNodeBlock(const vector<pair<number, number>> &data);
 
 		/**
 		 * @brief reads the data from the node block in a form of pair keys to addresses
@@ -141,7 +141,7 @@ namespace BPlusTree
 		 * @param block block the first storage block of the Node Block (usually got with checkType)
 		 * @return vector<pair<number, number>> the pairs (in-order) of keys to addresses
 		 */
-		vector<pair<number, number>> readNodeBlock(bytes block);
+		vector<pair<number, number>> readNodeBlock(const bytes &block);
 
 		/**
 		 * @brief returns the type and the content of the block by the address
@@ -160,7 +160,7 @@ namespace BPlusTree
 		 * @param input the in-order pairs of key and addresses
 		 * @return vector<pair<number, number>> the pairs of the next, higher level
 		 */
-		vector<pair<number, number>> pushLayer(vector<pair<number, number>> input);
+		vector<pair<number, number>> pushLayer(const vector<pair<number, number>> &input);
 
 		/**
 		 * @brief traverses the tree looking for some of invariants to hold

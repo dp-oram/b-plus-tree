@@ -69,7 +69,8 @@ namespace BPlusTree
 
 		for (auto _ : state)
 		{
-			benchmark::DoNotOptimize(tree->search(rand() % COUNT));
+			vector<bytes> returned;
+			tree->search(rand() % COUNT, returned);
 		}
 	}
 
@@ -90,7 +91,8 @@ namespace BPlusTree
 		for (auto _ : state)
 		{
 			number start = rand() % (COUNT - range);
-			benchmark::DoNotOptimize(tree->search(start, start + range - 1));
+			vector<bytes> returned;
+			tree->search(start, start + range - 1, returned);
 		}
 	}
 

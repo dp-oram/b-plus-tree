@@ -71,7 +71,7 @@ namespace BPlusTree
 		return bytes(material, material + size);
 	}
 
-	vector<bytes> getExpected(vector<pair<number, bytes>> data, number start, number end)
+	vector<bytes> getExpected(vector<pair<number, bytes>>& data, number start, number end)
 	{
 		vector<bytes> expected;
 		auto i = data.begin();
@@ -109,7 +109,9 @@ namespace BPlusTree
 
 		for (number key = 0; key < COUNT / 3; key++)
 		{
-			auto returned = tree->search(key);
+			vector<bytes> returned;
+			tree->search(key, returned);
+
 			sort(returned.begin(), returned.end());
 			auto expected = getExpected(data, key, key);
 
@@ -131,13 +133,17 @@ namespace BPlusTree
 				}
 			}
 
-			auto returned = tree->search(start, end);
+			vector<bytes> returned;
+			tree->search(start, end, returned);
+
 			sort(returned.begin(), returned.end());
 			auto expected = getExpected(data, start, end);
 			EXPECT_EQ(expected, returned);
 		}
 
-		auto returned = tree->search(0, COUNT / 3);
+		vector<bytes> returned;
+		tree->search(0, COUNT / 3, returned);
+
 		sort(returned.begin(), returned.end());
 		auto expected = getExpected(data, 0, COUNT / 3);
 		EXPECT_EQ(expected, returned);

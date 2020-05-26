@@ -105,7 +105,8 @@ namespace BPlusTree
 	TEST_P(TreeTest, BlockSizeTooSmall)
 	{
 		auto storage = make_shared<InMemoryStorageAdapter>(4 * sizeof(number));
-		ASSERT_THROW_CONTAINS(make_unique<Tree>(storage, vector<pair<number, bytes>>()), "block size too small");
+		vector<pair<number, bytes>> empty;
+		ASSERT_THROW_CONTAINS(make_unique<Tree>(storage, empty), "block size too small");
 	}
 
 	TEST_P(TreeTest, ReadDataLayer)
@@ -223,7 +224,8 @@ namespace BPlusTree
 
 		auto data = populateTree();
 
-		auto returned = tree->search(query);
+		vector<bytes> returned;
+		tree->search(query, returned);
 		auto expected = find_if(
 			data.begin(),
 			data.end(),
@@ -241,7 +243,8 @@ namespace BPlusTree
 
 		auto data = populateTree();
 
-		auto returned = tree->search(query);
+		vector<bytes> returned;
+		tree->search(query, returned);
 
 		ASSERT_EQ(0, returned.size());
 	}
@@ -253,7 +256,8 @@ namespace BPlusTree
 
 		auto data = populateTree(5, 15, 100, duplicates);
 
-		auto returned = tree->search(query);
+		vector<bytes> returned;
+		tree->search(query, returned);
 
 		vector<bytes> expected;
 		auto i = data.begin();
@@ -285,7 +289,9 @@ namespace BPlusTree
 
 		auto data = populateTree(5, 15, 100, duplicates);
 
-		auto returned = tree->search(start, end);
+		vector<bytes> returned;
+		tree->search(start, end, returned);
+
 		vector<bytes> expected;
 		auto i = data.begin();
 		while (i != data.end())
@@ -313,7 +319,9 @@ namespace BPlusTree
 
 		auto data = populateTree();
 
-		auto returned = tree->search(start, end);
+		vector<bytes> returned;
+		tree->search(start, end, returned);
+
 		vector<bytes> expected;
 		expected.resize(data.size());
 
@@ -341,7 +349,9 @@ namespace BPlusTree
 		storage = make_shared<FileSystemStorageAdapter>(BLOCK_SIZE, FILE_NAME, false);
 		tree	= make_unique<Tree>(storage);
 
-		auto returned = tree->search(start, end);
+		vector<bytes> returned;
+		tree->search(start, end, returned);
+
 		vector<bytes> expected;
 		expected.resize(data.size());
 
@@ -367,8 +377,9 @@ namespace BPlusTree
 	{
 		populateTree();
 
-		auto root = storage->get(tree->root);
-		root[0]	  = 0xff;
+		bytes root;
+		storage->get(tree->root, root);
+		root[0] = 0xff;
 		storage->set(tree->root, root);
 
 		ASSERT_THROW_CONTAINS(tree->checkConsistency(), "block type");
@@ -378,7 +389,8 @@ namespace BPlusTree
 	{
 		populateTree();
 
-		auto dataBlock				  = storage->get(tree->leftmostDataBlock);
+		bytes dataBlock;
+		storage->get(tree->leftmostDataBlock, dataBlock);
 		dataBlock[sizeof(number) * 2] = storage->empty();
 		storage->set(tree->leftmostDataBlock, dataBlock);
 
@@ -389,7 +401,8 @@ namespace BPlusTree
 	{
 		populateTree();
 
-		auto dataBlock				  = storage->get(tree->leftmostDataBlock);
+		bytes dataBlock;
+		storage->get(tree->leftmostDataBlock, dataBlock);
 		dataBlock[sizeof(number) * 3] = 0uLL;
 		storage->set(tree->leftmostDataBlock, dataBlock);
 

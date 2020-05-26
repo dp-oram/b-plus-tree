@@ -42,14 +42,14 @@ namespace BPlusTree
 	{
 	}
 
-	bytes InMemoryStorageAdapter::get(number location)
+	void InMemoryStorageAdapter::get(number location, bytes &response)
 	{
 		checkLocation(location);
 
-		return memory[location];
+		response.insert(response.begin(), memory[location].begin(), memory[location].end());
 	}
 
-	void InMemoryStorageAdapter::set(number location, bytes data)
+	void InMemoryStorageAdapter::set(number location, const bytes &data)
 	{
 		if (data.size() != blockSize)
 		{
@@ -118,7 +118,7 @@ namespace BPlusTree
 		file.close();
 	}
 
-	bytes FileSystemStorageAdapter::get(number location)
+	void FileSystemStorageAdapter::get(number location, bytes &response)
 	{
 		checkLocation(location);
 
@@ -126,10 +126,10 @@ namespace BPlusTree
 		file.seekg(location, file.beg);
 		file.read((char *)placeholder, blockSize);
 
-		return bytes(placeholder, placeholder + blockSize);
+		response.insert(response.begin(), placeholder, placeholder + blockSize);
 	}
 
-	void FileSystemStorageAdapter::set(number location, bytes data)
+	void FileSystemStorageAdapter::set(number location, const bytes &data)
 	{
 		if (data.size() != blockSize)
 		{
