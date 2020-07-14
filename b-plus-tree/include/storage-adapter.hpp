@@ -55,6 +55,13 @@ namespace BPlusTree
 		virtual number meta() = 0;
 
 		/**
+		 * @brief Returns the amount of malloc'ed space in bytes.
+		 *
+		 * @return number number of malloc'ed bytes.
+		 */
+		virtual number size() = 0;
+
+		/**
 		 * @brief Construct a new Abs Storage Adapter object
 		 *
 		 * @param blockSize the size of block in bytes (better be enough sized for the B+ tree)
@@ -99,6 +106,8 @@ namespace BPlusTree
 
 		number empty() final;
 		number meta() final;
+
+		number size() final;
 	};
 
 	/**
@@ -126,5 +135,7 @@ namespace BPlusTree
 
 		number empty() final;
 		number meta() final;
+
+		number size() final;
 	};
 }

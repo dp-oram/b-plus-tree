@@ -76,6 +76,11 @@ namespace BPlusTree
 		return META;
 	}
 
+	number InMemoryStorageAdapter::size()
+	{
+		return (locationCounter - 1) * blockSize;
+	}
+
 	void InMemoryStorageAdapter::checkLocation(number location)
 	{
 		if (location >= locationCounter)
@@ -158,6 +163,11 @@ namespace BPlusTree
 	number FileSystemStorageAdapter::meta()
 	{
 		return blockSize;
+	}
+
+	number FileSystemStorageAdapter::size()
+	{
+		return locationCounter - blockSize;
 	}
 
 	void FileSystemStorageAdapter::checkLocation(number location)

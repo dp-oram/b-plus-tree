@@ -150,6 +150,21 @@ namespace BPlusTree
 		ASSERT_EQ(data, returned);
 	}
 
+	TEST_P(StorageAdapterTest, Size)
+	{
+		// meta block only
+		EXPECT_EQ(BLOCK_SIZE, adapter->size());
+
+		auto address = adapter->malloc();
+		EXPECT_EQ(2 * BLOCK_SIZE, adapter->size());
+
+		adapter->set(address, fromText("hello", BLOCK_SIZE));
+		EXPECT_EQ(2 * BLOCK_SIZE, adapter->size());
+
+		adapter->malloc();
+		EXPECT_EQ(3 * BLOCK_SIZE, adapter->size());
+	}
+
 	string printTestName(testing::TestParamInfo<TestingStorageAdapterType> input)
 	{
 		switch (input.param)
